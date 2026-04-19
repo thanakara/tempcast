@@ -1,0 +1,11 @@
+defaults:
+  - override job_logging: custom
+
+run:
+  dir: .
+
+sweep:
+  dir: .
+  subdir: .
+
+output_subdir: null

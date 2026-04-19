@@ -1,0 +1,6 @@
+defaults:
+  - hydra: settings
+  - _self_
+
+wandb:
+  mode: disabled
