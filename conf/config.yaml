@@ -2,5 +2,12 @@ defaults:
   - hydra: settings
   - _self_
 
+seed: 42
+
 wandb:
   mode: disabled
+
+series:
+  is_mulvar: false
+  seq_length: 56
+  steps_ahead: 14

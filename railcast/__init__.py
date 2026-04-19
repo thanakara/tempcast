@@ -1,12 +1,18 @@
-import logging
+import os
 
-from pathlib import Path
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import logging
 
 import hydra
 
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig
 
-config_path = Path("conf").as_posix()
+from railcast.core import CONFIG_PATH
+from railcast.process import to_timeseries_dataset
+
+config_path = os.path.dirname(CONFIG_PATH)
 log = logging.getLogger(__name__)
 
 
@@ -16,6 +22,8 @@ log = logging.getLogger(__name__)
     version_base=None,
 )
 def main(cfg: DictConfig):
-    log.debug("__on_job_start__")
-    log.info("\n%s", OmegaConf.to_yaml(cfg))
-    log.debug("__on_job_end__")
+    *_, test_ds = to_timeseries_dataset(cfg)
+    log.info(test_ds.__class__.__name__)
+
+    for sequence in test_ds.take(1):
+        log.info("seq_shape: %s", sequence.shape)
