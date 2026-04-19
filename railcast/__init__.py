@@ -23,7 +23,5 @@ log = logging.getLogger(__name__)
 )
 def main(cfg: DictConfig):
     *_, test_ds = to_timeseries_dataset(cfg)
-    log.info(test_ds.__class__.__name__)
-
     for sequence in test_ds.take(1):
-        log.info("seq_shape: %s", sequence.shape)
+        log.info(sequence.shape)
