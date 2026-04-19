@@ -1,9 +1,10 @@
+from typing import Literal
 from pathlib import Path
 
 import pandas as pd
 import tensorflow as tf
 
-from railcast.core import DATASET_URL
+from railcast.core import DATASET_URL, DATASETS_DIR
 
 
 def fetch_ridership_dataset() -> Path:  # TODO: pull: from-registry
@@ -23,6 +24,13 @@ def fetch_ridership_dataset() -> Path:  # TODO: pull: from-registry
         ridership_path = Path(filepath).with_name("ridership")
 
     return ridership_path
+
+
+def create_tfrecord_path(
+    prefix: Literal["univar", "mulvar"],
+    set_: Literal["train", "valid", "test"],
+) -> str:
+    return str(Path(DATASETS_DIR).joinpath(f"{prefix}_rail_{set_}.tfrecord"))
 
 
 def make_timeseries_from_array(
