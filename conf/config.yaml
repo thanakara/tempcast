@@ -1,17 +1,8 @@
 defaults:
   - hydra: settings
+  - wandb: default
+  - series: univar
+  - model: simple_rnn
   - _self_
 
 seed: 42
-
-wandb:
-  entity: thanakara-team
-  project: railcast
-  mode: disabled
-  api_key: ${oc.env:WANDB_API_KEY}
-
-series:
-  is_mulvar: false
-  seq_length: 56
-  steps_ahead: 14
-  batch_size: 32

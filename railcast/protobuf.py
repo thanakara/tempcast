@@ -149,4 +149,4 @@ def load_tfrecord(path: str, cfg: DictConfig, shuffle: bool = False) -> tf.data.
 
     if shuffle:
         ds = ds.shuffle(buffer_size=500)
-    return ds.batch(cfg.series.batch_size).prefetch(tf.data.AUTOTUNE)
+    return ds.batch(cfg.model.training.batch_size).prefetch(tf.data.AUTOTUNE)  # HACK

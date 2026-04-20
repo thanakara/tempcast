@@ -1,0 +1,4 @@
+entity: thanakara-team
+project: railcast
+mode: disabled
+api_key: ${oc.env:WANDB_API_KEY}

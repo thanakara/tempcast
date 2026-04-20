@@ -1,0 +1,16 @@
+_target_: railcast.models.SimpleRNNForecaster
+name: simple_rnn
+
+arch:
+  units: 32
+  dropout: 0.0
+
+training:
+  optimizer: adam
+  lr: 0.001
+  epochs: 100
+  batch_size: 32
+  early_stopping:
+    patience: 10
+    monitor: val_loss
+    min_delta: 0.0001

@@ -13,7 +13,7 @@ _SeriesT = list[pd.Series | pd.DataFrame]
 
 def _load_series(cfg: DictConfig) -> pd.Series | pd.DataFrame:
     """
-    Load pd.DataFrame for analysis.
+    Load pd.DataFrame for analysis. DATAPATH must exist.
     Returns scaled univar or multivar series.
     """
     df = pd.read_csv(DATAPATH, parse_dates=["service_date"])

@@ -14,7 +14,7 @@ def fetch_ridership_dataset() -> Path:  # TODO: pull: from-registry
     filepath = tf.keras.utils.get_file(
         "ridership.tgz",
         DATASET_URL,
-        cache_dir="railcast/",
+        cache_dir=".",
         extract=True,
     )
 
@@ -30,7 +30,9 @@ def create_tfrecord_path(
     prefix: Literal["univar", "mulvar"],
     set_: Literal["train", "valid", "test"],
 ) -> str:
-    return str(Path(DATASETS_DIR).joinpath(f"{prefix}_rail_{set_}.tfrecord"))
+    tfrecords_dir = Path(DATASETS_DIR) / "tfrecords"
+    tfrecords_dir.mkdir(parents=True, exist_ok=True)
+    return str(tfrecords_dir.joinpath(f"{prefix}_rail_{set_}.tfrecord"))
 
 
 def make_timeseries_from_array(
