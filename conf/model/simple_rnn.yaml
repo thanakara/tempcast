@@ -1,9 +1,10 @@
 _target_: railcast.models.SimpleRNNForecaster
-name: simple_rnn
 
 arch:
+  name: simple_rnn
   units: 32
   dropout: 0.0
+  activation: tanh
 
 training:
   optimizer: adam

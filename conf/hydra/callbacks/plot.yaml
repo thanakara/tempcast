@@ -1,0 +1,2 @@
+plot_cb:
+  _target_: railcast.callbacks.PlotCallback

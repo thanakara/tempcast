@@ -3,16 +3,20 @@ import os
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+import json
 import logging
 
-from pathlib import Path
-
 import hydra
+import pandas as pd
 
 from dotenv import load_dotenv
-from omegaconf import DictConfig
+from omegaconf import OmegaConf, DictConfig
+
+import wandb
 
 from railcast.core import CONFIG_PATH
+from railcast.utils import create_tfrecord_path
+from railcast.trainer import Trainer
 from railcast.protobuf import load_tfrecord
 
 _ = load_dotenv(override=True)
@@ -26,11 +30,32 @@ log = logging.getLogger(__name__)
     version_base=None,
 )
 def main(cfg: DictConfig):
-    log.info("on_job_start")
-    path = Path(cfg.series.tfrecord_dir) / "mulvar_rail_test.tfrecord"
-    test_ds = load_tfrecord(str(path), cfg)
+    if cfg.wandb.mode != "disabled":
+        wandb.login(key=cfg.wandb.api_key)
+        wandb.init(
+            entity=cfg.wandb.entity,
+            project=cfg.wandb.project,
+            mode=cfg.wandb.mode,
+            config=OmegaConf.to_object(cfg),
+            name=cfg.model.name,
+        )
 
-    for X_batch, y_batch in test_ds.take(1):
-        log.debug("inputs-shape:%s", X_batch.shape)
-        log.debug("targets-shape:%s", y_batch.shape)
-    log.info("on_job_end")
+    prefix = "mulvar" if cfg.series.is_mulvar else "univar"
+    train_path, valid_path, test_path = [
+        create_tfrecord_path(prefix, split) for split in ("train", "valid", "test")
+    ]
+
+    train_ds = load_tfrecord(train_path, cfg, shuffle=True)
+    valid_ds = load_tfrecord(valid_path, cfg)
+    test_ds = load_tfrecord(test_path, cfg)
+
+    trainer = Trainer(cfg)
+    history, results = trainer.fit_and_evaluate(train_ds, valid_ds, test_ds)
+
+    log.info("History tail:\n%s", pd.DataFrame(history.history).tail())
+    log.info("Test results:\n%s", json.dumps(results, indent=3))
+
+    if cfg.wandb.mode != "disabled":
+        wandb.finish()
+
+    return trainer.model.keras_model

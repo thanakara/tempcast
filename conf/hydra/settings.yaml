@@ -1,5 +1,6 @@
 defaults:
   - override job_logging: custom
+  - override callbacks: plot
 
 run:
   dir: .

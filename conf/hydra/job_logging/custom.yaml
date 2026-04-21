@@ -18,6 +18,6 @@ loggers:
     propagate: yes
 
 root:
-  level: DEBUG
+  level: INFO
   handlers:
     - stdout-simple
