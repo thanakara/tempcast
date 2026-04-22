@@ -1,7 +1,7 @@
 import os
 
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import json
 import logging
@@ -15,7 +15,7 @@ from omegaconf import OmegaConf, DictConfig
 import wandb
 
 from railcast.core import CONFIG_PATH
-from railcast.utils import create_tfrecord_path
+from railcast.utils import count_batches, create_tfrecord_path
 from railcast.trainer import Trainer
 from railcast.protobuf import load_tfrecord
 
@@ -45,12 +45,21 @@ def main(cfg: DictConfig):
         create_tfrecord_path(prefix, split) for split in ("train", "valid", "test")
     ]
 
-    train_ds = load_tfrecord(train_path, cfg, shuffle=True)
-    valid_ds = load_tfrecord(valid_path, cfg)
+    train_steps = count_batches(train_path, cfg)
+    valid_steps = count_batches(valid_path, cfg)
+
+    train_ds = load_tfrecord(train_path, cfg, shuffle=True, repeat=True)
+    valid_ds = load_tfrecord(valid_path, cfg, repeat=True)
     test_ds = load_tfrecord(test_path, cfg)
 
     trainer = Trainer(cfg)
-    history, results = trainer.fit_and_evaluate(train_ds, valid_ds, test_ds)
+    history, results = trainer.fit_and_evaluate(
+        train_ds,
+        valid_ds,
+        test_ds,
+        train_steps,
+        valid_steps,
+    )
 
     log.info("History tail:\n%s", pd.DataFrame(history.history).tail())
     log.info("Test results:\n%s", json.dumps(results, indent=3))

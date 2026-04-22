@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from hydra.core.utils import JobReturn
 from hydra.experimental.callback import Callback
 
-from railcast.process import _split_series
+from railcast import process
 
 
 class PlotCallback(Callback):
@@ -16,7 +16,7 @@ class PlotCallback(Callback):
         steps_ahead = config.series.steps_ahead
         model: tf.keras.Model = job_return.return_value
         model_arch_name = config.model.arch.name
-        *_, test_series = _split_series(cfg=config)
+        *_, test_series = process._split_series(cfg=config)
         X = test_series.values[np.newaxis, :seq_length]
         y_pred_ahead = model.predict(X, verbose=0)
 

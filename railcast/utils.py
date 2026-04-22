@@ -4,7 +4,10 @@ from pathlib import Path
 import pandas as pd
 import tensorflow as tf
 
+from omegaconf import DictConfig
+
 from railcast.core import DATASET_URL, DATASETS_DIR
+from railcast.protobuf import load_tfrecord
 
 
 def fetch_ridership_dataset() -> Path:  # TODO: pull: from-registry
@@ -45,3 +48,7 @@ def make_timeseries_from_array(
         batch_size=None,
         shuffle=False,
     )
+
+
+def count_batches(path: str, cfg: DictConfig) -> int:
+    return sum(1 for _ in load_tfrecord(path, cfg))

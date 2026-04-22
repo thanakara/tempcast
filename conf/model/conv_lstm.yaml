@@ -1,0 +1,21 @@
+_target_: railcast.models.ConvLSTMForecaster
+
+arch:
+  name: conv_lstm
+  filters: 32
+  kernel_size: 3
+  pool_size: 2
+  units: [ 64, 32 ]
+  dropout: 0.2
+  recurrent_dropout: 0.1
+  activation: relu
+
+training:
+  optimizer: adam
+  lr: 0.001
+  epochs: 100
+  batch_size: 32
+  early_stopping:
+    patience: 10
+    monitor: val_loss
+    min_delta: 0.0001

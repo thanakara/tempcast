@@ -1,10 +1,10 @@
-_target_: railcast.models.SimpleRNNForecaster
+_target_: railcast.models.StackedLSTMForecaster
 
 arch:
-  name: simple_rnn
-  units: 32
-  dropout: 0.0
-  activation: null
+  name: stacked_lstm
+  units: [ 64, 32 ]
+  dropout: 0.2
+  recurrent_dropout: 0.1
 
 training:
   optimizer: adam

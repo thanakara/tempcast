@@ -137,7 +137,12 @@ def write_tfrecord(dataset: tf.data.Dataset, path: str, cfg: DictConfig) -> None
             writer.write(seq_example.SerializeToString())
 
 
-def load_tfrecord(path: str, cfg: DictConfig, shuffle: bool = False) -> tf.data.Dataset:
+def load_tfrecord(
+    path: str,
+    cfg: DictConfig,
+    shuffle: bool = False,
+    repeat: bool = False,
+) -> tf.data.Dataset:
     ds = tf.data.TFRecordDataset(path, compression_type="GZIP")
     split_mulvar = partial(_split_window_mulvar, cfg=cfg)
     split_univar = partial(_split_window_univar, cfg=cfg)
@@ -149,4 +154,7 @@ def load_tfrecord(path: str, cfg: DictConfig, shuffle: bool = False) -> tf.data.
 
     if shuffle:
         ds = ds.shuffle(buffer_size=500)
-    return ds.batch(cfg.model.training.batch_size).prefetch(tf.data.AUTOTUNE)  # HACK
+
+    if repeat:
+        ds = ds.repeat()
+    return ds.batch(cfg.model.training.batch_size)

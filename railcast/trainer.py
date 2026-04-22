@@ -6,13 +6,13 @@ from wandb.integration.keras import WandbCallback
 
 import wandb
 
-from railcast.models.protocols import Forecaster
+from railcast.models.base import BaseForecaster
 
 
 class Trainer:
     def __init__(self, cfg: DictConfig):
         self.cfg = cfg
-        self.model: Forecaster = instantiate(cfg.model, series=cfg.series)
+        self.model: BaseForecaster = instantiate(cfg.model, series=cfg.series)
 
     def _build_callbacks(self) -> list:
         extra = []
@@ -27,7 +27,12 @@ class Trainer:
         return self.model.build_callbacks(extra=extra)
 
     def fit_and_evaluate(
-        self, train_ds, valid_ds, test_ds
+        self,
+        train_ds,
+        valid_ds,
+        test_ds,
+        train_steps: int,
+        valid_steps: int,
     ) -> tuple[tf.keras.callbacks.History, dict]:
         keras_model = self.model.keras_model
         keras_model.compile(
@@ -39,6 +44,8 @@ class Trainer:
             train_ds,
             validation_data=valid_ds,
             epochs=self.cfg.model.training.epochs,
+            steps_per_epoch=train_steps,  # when epoch-ends
+            validation_steps=valid_steps,  # when valid-ends
             callbacks=self._build_callbacks(),  # add: extra-callbacks
             verbose=1,
         )

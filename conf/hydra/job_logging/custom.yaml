@@ -16,6 +16,9 @@ loggers:
   railcast:
     level: DEBUG
     propagate: yes
+  tensorflow:
+    level: ERROR
+    propagate: yes
 
 root:
   level: INFO
