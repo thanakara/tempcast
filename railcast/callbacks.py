@@ -1,16 +1,27 @@
+from typing import override
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from omegaconf import DictConfig
+from rich.progress import Progress
 from hydra.core.utils import JobReturn
 from hydra.experimental.callback import Callback
 
 from railcast import process
+from railcast.utils import generate_job_id
 
 
 class PlotCallback(Callback):
+    @override
+    def on_job_start(self, config, *, task_function, **kwargs):
+        print("__on_job_start__")
+        print(f"Job ID: {generate_job_id()}")
+
+    @override
     def on_job_end(self, config: DictConfig, job_return: JobReturn, **kwargs):
         seq_length = config.series.seq_length
         steps_ahead = config.series.steps_ahead
@@ -51,3 +62,35 @@ class PlotCallback(Callback):
         ax.set_ylim([200_000, 900_000])
         plt.legend(loc="lower left", fontsize=12)
         plt.show()
+        print("__on_job_end__")
+
+
+class CustomCallback(tf.keras.callbacks.Callback):
+    def __init__(self, cfg: DictConfig):
+        super().__init__()
+        self.total_epochs = cfg.model.training.epochs
+        self.progress = Progress()
+        self.task = None
+
+    @override
+    def on_train_begin(self, logs=None):
+        print("__on_train_begin__")
+        self.time_start = datetime.now()
+        self.progress.start()
+        self.task = self.progress.add_task(
+            f"Epoch 0/{self.total_epochs}", total=self.total_epochs
+        )
+
+    @override
+    def on_epoch_end(self, epoch, logs=None):
+        self.progress.update(
+            self.task, advance=1, description=f"Epoch {epoch + 1}/{self.total_epochs}"
+        )
+
+    @override
+    def on_train_end(self, logs=None):
+        self.progress.stop()
+        self.time_end = datetime.now()
+        duration = (self.time_end - self.time_start).total_seconds()
+        print("__on_train_end__")
+        print(f"Training Duration: {duration:.5f} seconds.")

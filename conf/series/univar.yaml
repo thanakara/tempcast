@@ -3,4 +3,5 @@ seq_length: 56
 steps_ahead: 14
 target_col: rail
 target_idx: 1
+features: [ rail ]
 tfrecord_dir: datasets/tfrecords

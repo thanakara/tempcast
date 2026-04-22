@@ -19,7 +19,7 @@ from railcast.utils import count_batches, create_tfrecord_path
 from railcast.trainer import Trainer
 from railcast.protobuf import load_tfrecord
 
-_ = load_dotenv(override=True)
+load_dotenv(override=True)
 config_path = os.path.dirname(CONFIG_PATH)
 log = logging.getLogger(__name__)
 
@@ -47,10 +47,11 @@ def main(cfg: DictConfig):
 
     train_steps = count_batches(train_path, cfg)
     valid_steps = count_batches(valid_path, cfg)
+    test_steps = count_batches(test_path, cfg)
 
     train_ds = load_tfrecord(train_path, cfg, shuffle=True, repeat=True)
     valid_ds = load_tfrecord(valid_path, cfg, repeat=True)
-    test_ds = load_tfrecord(test_path, cfg)
+    test_ds = load_tfrecord(test_path, cfg, repeat=True)
 
     trainer = Trainer(cfg)
     history, results = trainer.fit_and_evaluate(
@@ -59,6 +60,7 @@ def main(cfg: DictConfig):
         test_ds,
         train_steps,
         valid_steps,
+        test_steps,
     )
 
     log.info("History tail:\n%s", pd.DataFrame(history.history).tail())

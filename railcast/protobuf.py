@@ -1,16 +1,17 @@
 from functools import partial
 
+import numpy as np
 import tensorflow as tf
 
 from omegaconf import DictConfig
 
 
-def _float_feature(value):
+def _float_feature(value: float | np.floating) -> tf.train.Feature:
     return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 
 
 def make_sequence_example_for_univar(
-    window: tf.data.Dataset,
+    window: tf.Tensor,
 ) -> tf.train.SequenceExample:
     timesteps = window.numpy().tolist()  # list-of: 70_floats
 
@@ -32,7 +33,7 @@ def make_sequence_example_for_univar(
     )
 
 
-def _parse_sequence_example_univar(serialized_record):  # TODO: type-hint
+def _parse_sequence_example_univar(serialized_record: tf.Tensor) -> tf.Tensor:
     context_spec = {"length": tf.io.FixedLenFeature([], tf.int64)}
     sequence_spec = {"window": tf.io.FixedLenSequenceFeature([], tf.float32)}
 
@@ -45,12 +46,14 @@ def _parse_sequence_example_univar(serialized_record):  # TODO: type-hint
     return sequence["window"]
 
 
-def _split_window_univar(window: tf.data.Dataset, cfg: DictConfig):
+def _split_window_univar(
+    window: tf.Tensor, cfg: DictConfig
+) -> tuple[tf.Tensor, tf.Tensor]:
     return window[: -cfg.series.steps_ahead], window[-cfg.series.steps_ahead :]
 
 
 def make_sequence_example_for_mulvar(
-    window: tf.data.Dataset,
+    window: tf.Tensor,
 ) -> tf.train.SequenceExample:
     w = window.numpy()
 
@@ -87,7 +90,7 @@ def make_sequence_example_for_mulvar(
     )
 
 
-def _parse_sequence_example_mulvar(serialized_record):
+def _parse_sequence_example_mulvar(serialized_record: tf.Tensor) -> tf.Tensor:
     context_spec = {
         "length": tf.io.FixedLenFeature([], tf.int64),
         "n_features": tf.io.FixedLenFeature([], tf.int64),
@@ -119,14 +122,16 @@ def _parse_sequence_example_mulvar(serialized_record):
     return window
 
 
-def _split_window_mulvar(window: tf.data.Dataset, cfg: DictConfig):
+def _split_window_mulvar(
+    window: tf.Tensor, cfg: DictConfig
+) -> tuple[tf.Tensor, tf.Tensor]:
     X = window[: -cfg.series.steps_ahead]
-    y = window[-cfg.series.steps_ahead :, 1]  # rail
+    y = window[-cfg.series.steps_ahead :, cfg.series.target_idx]  # rail
 
     return X, y
 
 
-def write_tfrecord(dataset: tf.data.Dataset, path: str, cfg: DictConfig) -> None:
+def write_tfrecord(dataset: tf.Tensor, path: str, cfg: DictConfig) -> None:
     options = tf.io.TFRecordOptions(compression_type="GZIP")
     with tf.io.TFRecordWriter(path, options) as writer:
         for window in dataset:
@@ -142,7 +147,7 @@ def load_tfrecord(
     cfg: DictConfig,
     shuffle: bool = False,
     repeat: bool = False,
-) -> tf.data.Dataset:
+) -> tf.data.TFRecordDataset:
     ds = tf.data.TFRecordDataset(path, compression_type="GZIP")
     split_mulvar = partial(_split_window_mulvar, cfg=cfg)
     split_univar = partial(_split_window_univar, cfg=cfg)

@@ -1,4 +1,4 @@
-is_mulvar: True
+is_mulvar: true
 seq_length: 56
 steps_ahead: 14
 target_col: rail

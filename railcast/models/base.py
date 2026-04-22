@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import cached_property
 
 import tensorflow as tf
 
@@ -10,11 +11,17 @@ class BaseForecaster(ABC):
         self.arch = arch
         self.train_cfg = training
         self.series = series
+        self.n_features = len(series.features) if self.series.is_mulvar else 1
+        self.inputs = tf.keras.layers.Input(shape=[None, self.n_features])
 
-    @property
     @abstractmethod
+    def _build_keras_model(self) -> tf.keras.Model:
+        """Build and return keras.Model using FunctionalAPI."""
+        raise NotImplementedError
+
+    @cached_property
     def keras_model(self) -> tf.keras.Model:
-        pass
+        return self._build_keras_model()
 
     def build_optimizer(self) -> tf.keras.optimizers.Optimizer:
         optimizers = {
@@ -27,7 +34,9 @@ class BaseForecaster(ABC):
             raise ValueError(f"Unknown optimizer: {self.train_cfg.optimizer}")
         return cls(learning_rate=self.train_cfg.lr)
 
-    def build_callbacks(self, extra: list | None) -> list:
+    def build_callbacks(
+        self, extra: list[tf.keras.callbacks.Callback] | None
+    ) -> list[tf.keras.callbacks.Callback]:
         if extra is None:
             extra = []
 

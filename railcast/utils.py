@@ -1,3 +1,5 @@
+import uuid
+
 from typing import Literal
 from pathlib import Path
 
@@ -52,3 +54,7 @@ def make_timeseries_from_array(
 
 def count_batches(path: str, cfg: DictConfig) -> int:
     return sum(1 for _ in load_tfrecord(path, cfg))
+
+
+def generate_job_id() -> str:
+    return uuid.uuid4().hex

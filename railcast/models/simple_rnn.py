@@ -11,21 +11,23 @@ class SimpleRNNForecaster(BaseForecaster):
     def __init__(self, arch: DictConfig, training: DictConfig, series: DictConfig):
         super().__init__(arch, training, series)
 
-        n_features = len(series.features) if series.is_mulvar else 1
-        inputs = tf.keras.layers.Input(shape=[None, n_features])
-
-        X = tf.keras.layers.SimpleRNN(
-            units=arch.units,
-            activation=arch.activation,
-            dropout=arch.dropout,
-            return_sequences=False,
-            name=arch.name,
-        )(inputs)
-
-        outputs = tf.keras.layers.Dense(units=series.steps_ahead, name="forecast")(X)
-        self._model = tf.keras.Model(inputs=[inputs], outputs=[outputs], name=arch.name)
-
     @override
-    @property
-    def keras_model(self) -> tf.keras.Model:
-        return self._model
+    def _build_keras_model(self):
+        X = tf.keras.layers.SimpleRNN(
+            units=self.arch.units,
+            activation=self.arch.activation,
+            dropout=self.arch.dropout,
+            return_sequences=False,
+            name=self.arch.name,
+        )(self.inputs)
+
+        outputs = tf.keras.layers.Dense(
+            units=self.series.steps_ahead,
+            name="forecast",
+        )(X)
+
+        return tf.keras.Model(
+            inputs=[self.inputs],
+            outputs=[outputs],
+            name=self.arch.name,
+        )

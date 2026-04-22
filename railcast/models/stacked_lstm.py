@@ -11,24 +11,26 @@ class StackedLSTMForecaster(BaseForecaster):
     def __init__(self, arch: DictConfig, training: DictConfig, series: DictConfig):
         super().__init__(arch, training, series)
 
-        n_features = len(series.features) if series.is_mulvar else 1
-        inputs = tf.keras.layers.Input(shape=[None, n_features])
-
-        X = inputs
-        for i, units in enumerate(arch.units):
-            is_last = i == len(arch.units) - 1
+    @override
+    def _build_keras_model(self):
+        X = self.inputs
+        for i, units in enumerate(self.arch.units):
+            is_last = i == len(self.arch.units) - 1
             X = tf.keras.layers.LSTM(
                 units=units,
-                dropout=arch.dropout,
-                recurrent_dropout=arch.recurrent_dropout,
+                dropout=self.arch.dropout,
+                recurrent_dropout=self.arch.recurrent_dropout,
                 return_sequences=not is_last,
                 name=f"lstm_{i}",
             )(X)
 
-        outputs = tf.keras.layers.Dense(units=series.steps_ahead, name="forecast")(X)
-        self._model = tf.keras.Model(inputs=[inputs], outputs=[outputs], name=arch.name)
+        outputs = tf.keras.layers.Dense(
+            units=self.series.steps_ahead,
+            name="forecast",
+        )(X)
 
-    @override
-    @property
-    def keras_model(self) -> tf.keras.Model:
-        return self._model
+        return tf.keras.Model(
+            inputs=[self.inputs],
+            outputs=[outputs],
+            name=self.arch.name,
+        )
