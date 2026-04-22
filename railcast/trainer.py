@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from omegaconf import DictConfig
 from hydra.utils import instantiate
-from wandb.integration.keras import WandbCallback
+from wandb.integration.keras import WandbMetricsLogger
 
 import wandb
 
@@ -22,13 +22,7 @@ class Trainer:
             extra.append(CustomCallback(cfg=self.cfg))
 
         if self.cfg.wandb.mode != "disabled":
-            extra.append(
-                WandbCallback(
-                    monitor="val_loss",
-                    save_model=False,
-                    log_gradients=False,
-                )
-            )
+            extra.append(WandbMetricsLogger(log_freq="epoch"))
         return self.model.build_callbacks(extra=extra)
 
     def fit_and_evaluate(

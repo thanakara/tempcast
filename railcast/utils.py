@@ -56,5 +56,7 @@ def count_batches(path: str, cfg: DictConfig) -> int:
     return sum(1 for _ in load_tfrecord(path, cfg))
 
 
-def generate_job_id() -> str:
-    return uuid.uuid4().hex
+def generate_job_id(cfg: DictConfig) -> str:
+    short_id = uuid.uuid4().hex[:8]
+    mode = "mulvar" if cfg.series.is_mulvar else "univar"
+    return f"{cfg.model.arch.name}_{mode}__{short_id}"

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from functools import cached_property
 
 import tensorflow as tf
 
@@ -13,15 +12,12 @@ class BaseForecaster(ABC):
         self.series = series
         self.n_features = len(series.features) if self.series.is_mulvar else 1
         self.inputs = tf.keras.layers.Input(shape=[None, self.n_features])
+        self.keras_model = self._build_keras_model()
 
     @abstractmethod
     def _build_keras_model(self) -> tf.keras.Model:
         """Build and return keras.Model using FunctionalAPI."""
         raise NotImplementedError
-
-    @cached_property
-    def keras_model(self) -> tf.keras.Model:
-        return self._build_keras_model()
 
     def build_optimizer(self) -> tf.keras.optimizers.Optimizer:
         optimizers = {
