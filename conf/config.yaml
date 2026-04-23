@@ -7,3 +7,6 @@ defaults:
 
 seed: 42
 verbose: false
+resume: false
+# ++run_id
+checkpoint_dir: checkpoints

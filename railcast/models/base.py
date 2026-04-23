@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Protocol, runtime_checkable
 
 import tensorflow as tf
 
@@ -51,3 +52,20 @@ class BaseForecaster(ABC):
             )
 
         return callbacks + extra
+
+
+@runtime_checkable
+class TrainerProtocol(Protocol):
+    def _build_callbacks(
+        self, checkpoint_path: str, epoch_path: str
+    ) -> list[tf.keras.callbacks.Callback]: ...
+
+    def fit_and_evaluate(
+        self,
+        train_ds: tf.data.Dataset,
+        valid_ds: tf.data.Dataset,
+        test_ds: tf.data.Dataset,
+        train_steps: int,
+        valid_steps: int,
+        test_steps: int,
+    ) -> tf.keras.callbacks.History: ...

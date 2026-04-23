@@ -13,7 +13,7 @@ arch:
 training:
   optimizer: adam
   lr: 0.001
-  epochs: 100
+  epochs: 50
   batch_size: 32
   early_stopping:
     patience: 10

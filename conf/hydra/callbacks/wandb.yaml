@@ -1,0 +1,2 @@
+wandb_cb:
+  _target_: railcast.callbacks.WandBCallback

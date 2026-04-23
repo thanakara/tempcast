@@ -13,6 +13,7 @@ from railcast.core import CONFIG_PATH
 from railcast.utils import count_batches, create_tfrecord_path
 from railcast.trainer import Trainer
 from railcast.protobuf import load_tfrecord
+from railcast.models.base import TrainerProtocol
 
 config_path = os.path.dirname(CONFIG_PATH)
 log = logging.getLogger(__name__)
@@ -24,27 +25,23 @@ log = logging.getLogger(__name__)
     version_base=None,
 )
 def main(cfg: DictConfig):
+    splits = ("train", "valid", "test")
     prefix = "mulvar" if cfg.series.is_mulvar else "univar"
-    train_path, valid_path, test_path = [
-        create_tfrecord_path(prefix, split) for split in ("train", "valid", "test")
-    ]
+    paths = [create_tfrecord_path(prefix, split) for split in splits]
+    steps = [count_batches(path, cfg) for path in paths]
 
-    train_steps = count_batches(train_path, cfg)
-    valid_steps = count_batches(valid_path, cfg)
-    test_steps = count_batches(test_path, cfg)
-
-    train_ds = load_tfrecord(train_path, cfg, shuffle=True, repeat=True)
-    valid_ds = load_tfrecord(valid_path, cfg, repeat=True)
-    test_ds = load_tfrecord(test_path, cfg, repeat=True)
+    train_ds = load_tfrecord(paths[0], cfg, shuffle=True, repeat=True)
+    valid_ds = load_tfrecord(paths[1], cfg, repeat=True)
+    test_ds = load_tfrecord(paths[2], cfg, repeat=True)
 
     trainer = Trainer(cfg)
-    trainer.fit_and_evaluate(
+    assert isinstance(trainer, TrainerProtocol)
+
+    _ = trainer.fit_and_evaluate(
         train_ds,
         valid_ds,
         test_ds,
-        train_steps,
-        valid_steps,
-        test_steps,
+        *steps,
     )
 
     return trainer.model.keras_model

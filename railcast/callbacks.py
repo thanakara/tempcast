@@ -16,31 +16,53 @@ from hydra.experimental.callback import Callback
 import wandb
 
 from railcast import process
-from railcast.utils import generate_job_id
+from railcast.core import state
+from railcast.utils import (
+    load_run_id,
+    save_run_id,
+    generate_job_id,
+    get_checkpoint_dir,
+    reconstruct_job_id,
+)
 
 load_dotenv(override=True)
 
 
-class PlotCallback(Callback):
+class WandBCallback(Callback):
     @override
-    def on_job_start(self, config: DictConfig, *, task_function, **kwargs):
-        self._job_id = generate_job_id(cfg=config)
+    def on_job_start(self, config: DictConfig, *, task_function, **kwargs) -> None:
+        self._job_id = generate_job_id(config.model.arch.name, config.series.is_mulvar)
+        state.set_job_id(job_id=self._job_id)
+        self._checkpoint_dir = get_checkpoint_dir(config, state.get_job_id())
+
         if config.wandb.mode != "disabled":
             cfg_masked_copy = OmegaConf.masked_copy(
-                config, ["wandb", "series", "model"]
+                config, ["wandb", "series", "model", "seed"]
             )
+            if config.resume and config.run_id:
+                job_name = reconstruct_job_id(config, config.run_id)
+                self._checkpoint_dir = get_checkpoint_dir(config, job_name)
+
+            self._checkpoint_dir.mkdir(parents=True, exist_ok=True)
+            run_id = load_run_id(self._checkpoint_dir) if config.resume else None
+            resume_mode = "allow" if config.resume else None
+
             wandb.login(key=config.wandb.api_key)
-            wandb.init(
+            run = wandb.init(
                 entity=config.wandb.entity,
                 project=config.wandb.project,
                 mode=config.wandb.mode,
+                name=state.get_job_id() if not config.resume else None,
+                id=run_id,
+                resume=resume_mode,
                 config=OmegaConf.to_object(cfg_masked_copy),
-                name=generate_job_id(config),
             )
-        print(f"Job ID: {self._job_id}")
+
+            # save
+            save_run_id(run.id, self._checkpoint_dir)
 
     @override
-    def on_job_end(self, config: DictConfig, job_return: JobReturn, **kwargs):
+    def on_job_end(self, config: DictConfig, job_return: JobReturn, **kwargs) -> None:
         seq_length = config.series.seq_length
         steps_ahead = config.series.steps_ahead
         model: tf.keras.Model = job_return.return_value
@@ -80,7 +102,13 @@ class PlotCallback(Callback):
         ax.vlines(start, 0, 1e6, colors="k", linestyles="--")
         ax.set_ylim([200_000, 900_000])
         plt.legend(loc="lower left", fontsize=12)
-        plot_path = Path("plots") / f"{self._job_id}.png"
+
+        if config.resume and config.run_id:
+            image_stem = reconstruct_job_id(config, config.run_id)
+        else:
+            image_stem = state.get_job_id()
+
+        plot_path = Path("plots") / f"{image_stem}.png"
         plot_path.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(plot_path.absolute(), format="png", dpi=150)
         plt.close()
@@ -116,3 +144,13 @@ class CustomCallback(tf.keras.callbacks.Callback):
         self.time_end = datetime.now()
         duration = (self.time_end - self.time_start).total_seconds()
         print(f"Training Duration: {duration:.5f} seconds.")
+
+
+class EpochTrackerCallback(tf.keras.callbacks.Callback):
+    def __init__(self, epoch_path: str):
+        super().__init__()
+        self.epoch_path = Path(epoch_path)
+
+    @override
+    def on_epoch_end(self, epoch, logs=None):
+        self.epoch_path.write_text(str(epoch + 1))

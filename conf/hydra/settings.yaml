@@ -1,6 +1,6 @@
 defaults:
   - override job_logging: custom
-  - override callbacks: plot
+  - override callbacks: wandb
 
 run:
   dir: .
