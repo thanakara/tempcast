@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from tempcast.core import DATAPATH
 from tempcast.utils import make_timeseries_from_array
 
-_SeriesT = list[pd.Series | pd.DataFrame]
+type _SeriesT = list[pd.Series | pd.DataFrame]
 
 
 class _Stats(TypedDict):
