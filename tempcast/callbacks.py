@@ -15,15 +15,15 @@ from hydra.experimental.callback import Callback
 
 import wandb
 
-from railcast import process
-from railcast.core import state
-from railcast.utils import (
+from tempcast.core import state
+from tempcast.utils import (
     load_run_id,
     save_run_id,
     generate_job_id,
     get_checkpoint_dir,
     reconstruct_job_id,
 )
+from tempcast.process import denormalize, split_series, get_temp_stats
 
 load_dotenv(override=True)
 
@@ -68,7 +68,7 @@ class WandBCallback(Callback):
         model: tf.keras.Model = job_return.return_value
 
         series_type = "mulvar" if config.series.is_mulvar else "univar"
-        *_, test_series = process._split_series(cfg=config)
+        (*_, test_series), stats = split_series(cfg=config)
         X = test_series.values[np.newaxis, :seq_length]
         y_pred_ahead = model.predict(X, verbose=0)
 
@@ -78,29 +78,35 @@ class WandBCallback(Callback):
             index=pd.date_range(
                 start,
                 periods=steps_ahead,
-                freq="D",
+                freq="h",
             ),
         )
 
-        rail_series = test_series["rail"] if config.series.is_mulvar else test_series
+        temp_series = test_series["temp"] if config.series.is_mulvar else test_series
+
+        temp_stats = get_temp_stats(stats, config.series.is_mulvar)
+        temp_series_denorm = denormalize(temp_series, temp_stats)
+        Y_pred_denorm = denormalize(Y_pred, temp_stats)
 
         _, ax = plt.subplots(figsize=(8, 4))
-        (
-            rail_series[seq_length - 2 * steps_ahead : seq_length + steps_ahead] * 1e6
-        ).plot(
+        temp_series_denorm[
+            seq_length - 2 * steps_ahead : seq_length + steps_ahead
+        ].plot(
             marker=".",
-            label=f"{series_type}_rail_test__ground_truth",
+            label=f"{series_type}_temp_test__ground_truth",
             ax=ax,
         )
-        (Y_pred * 1e6).plot(
+        Y_pred_denorm.plot(
             marker="x",
             color="r",
-            label=f"{self._job_id}__forecast",
+            label=f"{state.get_job_id()}__forecast",
             grid=True,
             ax=ax,
         )
-        ax.vlines(start, 0, 1e6, colors="k", linestyles="--")
-        ax.set_ylim([200_000, 900_000])
+
+        bottom, top = temp_series_denorm.min() - 2, temp_series_denorm.max() + 2
+        ax.vlines(start, bottom, top, colors="k", linestyles="--")
+        ax.set_ylim([bottom, top])
         plt.legend(loc="lower left", fontsize=12)
 
         if config.resume and config.run_id:

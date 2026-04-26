@@ -1,3 +1,7 @@
+line-length = 88
+target-version = "py312"
+exclude = [".git", ".vscode"]
+
 [lint]
 select = ["I", "B", "C", "E", "F", "W", "B9", "UP", "PL"]
 ignore = ["W191", "E731", "B905", "PLR0913", "PLC0414"]
@@ -6,7 +10,7 @@ ignore = ["W191", "E731", "B905", "PLR0913", "PLC0414"]
 from-first = false
 length-sort = true
 lines-between-types = 1
-known-first-party = ["railcast"]
+known-first-party = ["tempcast"]
 
 [format]
 quote-style = "double"

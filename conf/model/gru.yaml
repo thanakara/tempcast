@@ -1,4 +1,4 @@
-_target_: railcast.models.GRUForecaster
+_target_: tempcast.models.GRUForecaster
 
 arch:
   name: gru
@@ -9,7 +9,7 @@ arch:
 training:
   optimizer: adam
   lr: 0.001
-  epochs: 50
+  epochs: 100
   batch_size: 32
   early_stopping:
     patience: 10

@@ -6,10 +6,10 @@ from wandb.integration.keras import WandbMetricsLogger
 
 import wandb
 
-from railcast.core import state
-from railcast.utils import get_checkpoint_dir, reconstruct_job_id
-from railcast.callbacks import CustomCallback, EpochTrackerCallback
-from railcast.models.base import BaseForecaster
+from tempcast.core import state
+from tempcast.utils import get_checkpoint_dir, reconstruct_job_id
+from tempcast.callbacks import CustomCallback, EpochTrackerCallback
+from tempcast.models.base import BaseForecaster
 
 
 class Trainer:

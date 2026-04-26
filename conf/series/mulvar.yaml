@@ -1,7 +1,7 @@
 is_mulvar: true
-seq_length: 56
-steps_ahead: 14
-target_col: rail
-target_idx: 1
-features: [ bus, rail, day_type_A, day_type_U, day_type_W ]
+seq_length: 48
+steps_ahead: 12
+target_col: temp
+target_idx: 0
+features: [ temp, humidity, precip, windspeed, cloudcover, solarradiation ]
 tfrecord_dir: datasets/tfrecords

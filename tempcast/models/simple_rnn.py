@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from omegaconf import DictConfig
 
-from railcast.models.base import BaseForecaster
+from tempcast.models.base import BaseForecaster
 
 
 class SimpleRNNForecaster(BaseForecaster):

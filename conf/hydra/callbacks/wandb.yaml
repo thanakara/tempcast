@@ -1,2 +1,2 @@
 wandb_cb:
-  _target_: railcast.callbacks.WandBCallback
+  _target_: tempcast.callbacks.WandBCallback

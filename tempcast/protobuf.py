@@ -13,7 +13,7 @@ def _float_feature(value: float | np.floating) -> tf.train.Feature:
 def make_sequence_example_for_univar(
     window: tf.Tensor,
 ) -> tf.train.SequenceExample:
-    timesteps = window.numpy().tolist()  # list-of: 70_floats
+    timesteps = window.numpy().tolist()
 
     return tf.train.SequenceExample(
         context=tf.train.Features(
@@ -70,20 +70,23 @@ def make_sequence_example_for_mulvar(
         ),
         feature_lists=tf.train.FeatureLists(
             feature_list={
-                "bus": tf.train.FeatureList(
+                "temp": tf.train.FeatureList(
                     feature=[_float_feature(v) for v in w[:, 0]]
                 ),
-                "rail": tf.train.FeatureList(
+                "humidity": tf.train.FeatureList(
                     feature=[_float_feature(v) for v in w[:, 1]]
                 ),
-                "day_type_A": tf.train.FeatureList(
+                "precip": tf.train.FeatureList(
                     feature=[_float_feature(v) for v in w[:, 2]]
                 ),
-                "day_type_U": tf.train.FeatureList(
+                "windspeed": tf.train.FeatureList(
                     feature=[_float_feature(v) for v in w[:, 3]]
                 ),
-                "day_type_W": tf.train.FeatureList(
+                "cloudcover": tf.train.FeatureList(
                     feature=[_float_feature(v) for v in w[:, 4]]
+                ),
+                "solarradiation": tf.train.FeatureList(
+                    feature=[_float_feature(v) for v in w[:, 5]]
                 ),
             }
         ),
@@ -96,11 +99,12 @@ def _parse_sequence_example_mulvar(serialized_record: tf.Tensor) -> tf.Tensor:
         "n_features": tf.io.FixedLenFeature([], tf.int64),
     }
     sequence_spec = {
-        "bus": tf.io.FixedLenSequenceFeature([], tf.float32),
-        "rail": tf.io.FixedLenSequenceFeature([], tf.float32),
-        "day_type_A": tf.io.FixedLenSequenceFeature([], tf.float32),
-        "day_type_U": tf.io.FixedLenSequenceFeature([], tf.float32),
-        "day_type_W": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "temp": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "humidity": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "precip": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "windspeed": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "cloudcover": tf.io.FixedLenSequenceFeature([], tf.float32),
+        "solarradiation": tf.io.FixedLenSequenceFeature([], tf.float32),
     }
 
     _, sequences = tf.io.parse_single_sequence_example(
@@ -111,11 +115,12 @@ def _parse_sequence_example_mulvar(serialized_record: tf.Tensor) -> tf.Tensor:
 
     window = tf.stack(
         [
-            sequences["bus"],
-            sequences["rail"],
-            sequences["day_type_A"],
-            sequences["day_type_U"],
-            sequences["day_type_W"],
+            sequences["temp"],
+            sequences["humidity"],
+            sequences["precip"],
+            sequences["windspeed"],
+            sequences["cloudcover"],
+            sequences["solarradiation"],
         ],
         axis=-1,
     )
@@ -126,7 +131,7 @@ def _split_window_mulvar(
     window: tf.Tensor, cfg: DictConfig
 ) -> tuple[tf.Tensor, tf.Tensor]:
     X = window[: -cfg.series.steps_ahead]
-    y = window[-cfg.series.steps_ahead :, cfg.series.target_idx]  # rail
+    y = window[-cfg.series.steps_ahead :, cfg.series.target_idx]  # temp
 
     return X, y
 

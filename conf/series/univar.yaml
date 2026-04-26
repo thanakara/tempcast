@@ -1,7 +1,7 @@
 is_mulvar: false
-seq_length: 56
-steps_ahead: 14
-target_col: rail
-target_idx: 1
-features: [ rail ]
+seq_length: 48
+steps_ahead: 12
+target_col: temp
+target_idx: 0
+features: [ temp ]
 tfrecord_dir: datasets/tfrecords

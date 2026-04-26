@@ -1,4 +1,4 @@
-_target_: railcast.models.SimpleRNNForecaster
+_target_: tempcast.models.SimpleRNNForecaster
 
 arch:
   name: simple_rnn
@@ -9,7 +9,7 @@ arch:
 training:
   optimizer: adam
   lr: 0.001
-  epochs: 50
+  epochs: 100
   batch_size: 32
   early_stopping:
     patience: 10

@@ -1,4 +1,4 @@
 entity: thanakara-team
-project: railcast
+project: tempcast
 mode: disabled
 api_key: ${oc.env:WANDB_API_KEY}

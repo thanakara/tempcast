@@ -13,7 +13,7 @@ handlers:
     stream: ext://sys.stdout
 
 loggers:
-  railcast:
+  tempcast:
     level: DEBUG
     propagate: yes
   tensorflow:

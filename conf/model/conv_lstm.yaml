@@ -1,4 +1,4 @@
-_target_: railcast.models.ConvLSTMForecaster
+_target_: tempcast.models.ConvLSTMForecaster
 
 arch:
   name: conv_lstm
@@ -13,7 +13,7 @@ arch:
 training:
   optimizer: adam
   lr: 0.001
-  epochs: 50
+  epochs: 100
   batch_size: 32
   early_stopping:
     patience: 10

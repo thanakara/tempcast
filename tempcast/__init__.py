@@ -9,11 +9,11 @@ import hydra
 
 from omegaconf import DictConfig
 
-from railcast.core import CONFIG_PATH
-from railcast.utils import count_batches, create_tfrecord_path
-from railcast.trainer import Trainer
-from railcast.protobuf import load_tfrecord
-from railcast.models.base import TrainerProtocol
+from tempcast.core import CONFIG_PATH
+from tempcast.utils import count_batches, create_tfrecord_path
+from tempcast.trainer import Trainer
+from tempcast.protobuf import load_tfrecord
+from tempcast.models.base import TrainerProtocol
 
 config_path = os.path.dirname(CONFIG_PATH)
 log = logging.getLogger(__name__)

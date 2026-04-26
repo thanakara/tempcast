@@ -1,4 +1,4 @@
-_target_: railcast.models.StackedLSTMForecaster
+_target_: tempcast.models.StackedLSTMForecaster
 
 arch:
   name: stacked_lstm
@@ -9,7 +9,7 @@ arch:
 training:
   optimizer: adam
   lr: 0.001
-  epochs: 50
+  epochs: 100
   batch_size: 32
   early_stopping:
     patience: 10

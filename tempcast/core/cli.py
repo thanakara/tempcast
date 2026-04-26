@@ -15,10 +15,10 @@ from rich.progress import Progress, TextColumn, SpinnerColumn
 
 import wandb
 
-from railcast.core import CONFIG_PATH
-from railcast.utils import create_tfrecord_path
-from railcast.process import to_timeseries_dataset
-from railcast.protobuf import write_tfrecord
+from tempcast.core import DATAPATH, CONFIG_PATH
+from tempcast.utils import update_dataset, create_tfrecord_path
+from tempcast.process import to_timeseries_dataset
+from tempcast.protobuf import write_tfrecord
 
 _ = load_dotenv(override=True)
 
@@ -49,8 +49,36 @@ def get_cfg(overrides: list[str] = None) -> DictConfig:
 
 @click.group
 def assets():
-    """Railcast core data-records operations."""
+    """Tempcast core data-records operations."""
     pass
+
+
+@assets.command(name="update-weather")
+def update_weather() -> None:
+    """Fetch missing weather days from Visual Crossing and append to CSV."""
+
+    console.print(
+        Panel(
+            f"[info]Dataset:[/info] {DATAPATH}\n[info]Location:[/info] Athens, GR",
+            title="[bold]update-weather[/bold]",
+            border_style="cyan",
+        )
+    )
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+        transient=True,
+    ) as progress:
+        progress.add_task("Checking dataset...", total=None)
+        df = update_dataset()
+
+    console.print(
+        f"[success]✓[/success] Dataset up to date.\n"
+        f"  [dim]→[/dim] [white]{len(df)} total rows[/white] "
+        f"[dim]({df.index.min()} → {df.index.max()})[/dim]"
+    )
 
 
 @assets.command(name="make-tfrecords")
@@ -99,9 +127,9 @@ def make_tfrecords(mulvar: bool, upload: bool, wandb_mode: str | None) -> None:
     test_path = create_tfrecord_path(prefix, "test")
 
     paths = {
-        "rail_train": train_path,
-        "rail_valid": valid_path,
-        "rail_test": test_path,
+        "temp_train": train_path,
+        "temp_valid": valid_path,
+        "temp_test": test_path,
     }
 
     with Progress(
@@ -164,9 +192,9 @@ def _upload_artifact(cfg: DictConfig, paths: dict[str, str]) -> None:
         mode=mode,
     ) as run:
         artifact = wandb.Artifact(
-            name=f"cta-tfrecords-{series_mode}",
+            name=f"vc-tfrecords-{series_mode}",
             type="dataset",
-            description=f"CTA-ridership {series_mode} tfrecords",
+            description=f"VisualCrossing {series_mode} tfrecords",
             metadata=OmegaConf.to_object(cfg.series),
         )
 
